@@ -420,49 +420,103 @@ function toggleSpeech(button) {
 }
 
 async function playMinnanSpeech(button) {
+
   const tabContent = button.closest(".tab-content");
   if (!tabContent) return;
 
-  const text = button.getAttribute("data-minnan-text") || tabContent.getAttribute("data-minnan-text") || getTextFromTabContent(tabContent);
+
+  const text =
+    button.getAttribute("data-minnan-text") ||
+    tabContent.getAttribute("data-minnan-text") ||
+    getTextFromTabContent(tabContent);
+
+
   if (!text) return;
 
+
   const synth = window.speechSynthesis;
+
   if (synth && (synth.speaking || synth.paused)) {
     synth.cancel();
   }
 
+
   resetAllPlayButtons();
+
   currentSpeechButton = button;
+
   updateButtonState(button, "preparing");
 
+
+  // ⭐ 先建立 audio，保留 iOS 使用者手勢
+  const audio = document.createElement("audio");
+
+  audio.setAttribute("playsinline", "");
+  audio.preload = "auto";
+
+  currentUtterance = audio;
+
+
   try {
-    const objectUrl = await fetchMinnanAudio(text);
-    const audio = new Audio(objectUrl);
-    currentUtterance = audio;
+
+
+    const audioUrl = await fetchMinnanAudio(text);
+
+
+    console.log("Minnan audio URL:", audioUrl);
+
+
+    audio.src = audioUrl;
+
 
     updateButtonState(button, "playing");
 
+
     audio.onended = () => {
+
       updateButtonState(button, "stopped");
+
       currentSpeechButton = null;
       currentUtterance = null;
-      URL.revokeObjectURL(objectUrl);
+
     };
 
-    audio.onerror = () => {
+
+    audio.onerror = (e) => {
+
+      console.error(
+        "audio error:",
+        e
+      );
+
       updateButtonState(button, "stopped");
+
       currentSpeechButton = null;
       currentUtterance = null;
-      URL.revokeObjectURL(objectUrl);
+
     };
+
 
     await audio.play();
-  } catch (error) {
-    console.error(error);
+
+
+  } catch(error) {
+
+
+    console.error(
+      "閩南語播放失敗:",
+      error
+    );
+
+
     updateButtonState(button, "stopped");
+
     currentSpeechButton = null;
+
     currentUtterance = null;
+
   }
+
 }
 
 function getTextFromTabContent(tabContent) {
