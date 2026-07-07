@@ -8,16 +8,12 @@ html,
 body {
   min-width: 0;
   overflow-x: hidden; /* 隱藏水平捲軸，避免底部出現 horizontal scrollbar */
-  min-height: 100%;
 }
 
 body {
   font-family: "Noto Sans", "Microsoft YaHei", sans-serif;
   background: #f4f7fb;
   color: #1e2733;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
 }
 
 .container {
@@ -288,9 +284,11 @@ button {
 
 /* Footer tweaks: reuse header look but center lines vertically */
 .footer {
+  /* header already provides background and full-width behaviour */
+  border-bottom: none;
   border-top: 3px solid #2168f3;
-  padding: 18px 0;
-  margin-top: auto;
+  margin-top: 28px; /* 與上方內容保持間距 */
+  padding: 18px 0;  /* 增加上下內距，讓文字不緊貼邊緣 */
 }
 
 /* Center footer text and add spacing */
