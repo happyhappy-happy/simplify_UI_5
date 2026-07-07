@@ -33,6 +33,7 @@ p {
   margin-bottom: 12px;
   font-size: 17px;
   text-align: center;
+  line-height: 1.2;
 }
 
 p.platform-purpose {
