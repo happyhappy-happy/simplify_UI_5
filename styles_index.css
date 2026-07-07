@@ -33,7 +33,6 @@ p {
   margin-bottom: 12px;
   font-size: 17px;
   text-align: center;
-  line-height: 1.2;
 }
 
 p.platform-purpose {
@@ -45,6 +44,7 @@ p.platform-purpose {
   display: block;        /* 改成 block 讓 margin auto 生效 */
   max-width: 900px;      /* 設定最大寬度，避免貼邊 */
   box-sizing: border-box;/* 確保 padding 不會超過 max-width */
+  line-height: 1.2;
 }
 
 
