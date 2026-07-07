@@ -123,38 +123,27 @@ const MINNAN_TTS_EVENT_URL =
 
 // 解析 Gradio SSE 回傳
 function parseEventPayload(text) {
-
   const trimmedText = (text || "").trim();
-
   if (!trimmedText) return null;
-
-
   const dataLines = trimmedText
     .split(/\r?\n/)
     .filter(line => line.startsWith("data:"));
 
-
   for (let i = dataLines.length - 1; i >= 0; i--) {
-
     const dataText = dataLines[i]
       .replace(/^data:\s*/, "")
       .trim();
 
-
     if (!dataText || dataText === "null") {
       continue;
     }
-
-
     try {
       return JSON.parse(dataText);
     }
     catch (e) {
       console.warn("JSON parse failed:", dataText);
     }
-
   }
-
 
   try {
     return JSON.parse(trimmedText);
@@ -168,61 +157,35 @@ function parseEventPayload(text) {
 
 // 等待 Gradio 產生語音
 async function pollEvent(eventId) {
-
-
   const url = `${MINNAN_TTS_EVENT_URL}/${eventId}`;
-
-
   for (let i = 0; i < 30; i++) {
-
-
     const response = await fetch(url);
-
     const text = await response.text();
-
-
     const result = parseEventPayload(text);
-
-
     const data = result?.data ?? result;
-
-
     const file =
       data?.[0] ??
       data;
 
-
     if (file?.url) {
-
       return file.url;
-
     }
-
 
     if (file?.path) {
-
       return file.path;
-
     }
-
 
     await new Promise(resolve =>
       setTimeout(resolve, 1000)
     );
-
   }
-
-
   throw new Error("等待語音產生逾時");
-
 }
 
 
 
 // 呼叫閩南語 TTS
 async function fetchMinnanAudio(text) {
-
-
   const response = await fetch(
     MINNAN_TTS_API_URL,
     {
@@ -238,64 +201,35 @@ async function fetchMinnanAudio(text) {
     }
   );
 
-
   const result = await response.json();
-
-
   const eventId =
     result.event_id ||
     result.eventId;
 
-
   if (!eventId) {
-
     throw new Error(
       "沒有取得 Gradio event id"
     );
-
   }
-
-
 
   let audioUrl = await pollEvent(eventId);
 
-
-
   if (!audioUrl.startsWith("http")) {
-
     audioUrl =
       "https://happy0708-minnan-test.hf.space/"
       + audioUrl;
-
   }
-
-
-
   return audioUrl;
-
 }
-
-
 
 // 播放閩南語
 async function speakMinnan(text) {
-
-
   try {
-
-
     const audioUrl =
       await fetchMinnanAudio(text);
-
-
-
     const audio =
       new Audio();
-
-
-
     audio.src = audioUrl;
-
 
     // iOS Safari 必須加入
     audio.setAttribute(
@@ -303,56 +237,36 @@ async function speakMinnan(text) {
       ""
     );
 
-
     audio.volume = 1.0;
 
-
-
     await audio.play();
-
-
 
     console.log(
       "閩南語播放成功"
     );
-
-
   }
 
-
   catch(error) {
-
-
     console.error(
       "閩南語播放失敗:",
       error
     );
-
-
     alert(
       "閩南語語音播放失敗：" 
       + error.message
     );
-
   }
-
 }
-
-
 
 // 判斷是否為閩南語按鈕
 function isMinnanButton(button) {
-
-
   return button &&
     (
       button.getAttribute("data-voice") === "minnan" ||
       (button.textContent || "")
       .includes("閩南語")
     );
-
 }
-
 
 // ------- end MinNan support -------
 
@@ -420,19 +334,13 @@ function toggleSpeech(button) {
 }
 
 async function playMinnanSpeech(button) {
-
   const tabContent = button.closest(".tab-content");
   if (!tabContent) return;
-
-
   const text =
     button.getAttribute("data-minnan-text") ||
     tabContent.getAttribute("data-minnan-text") ||
     getTextFromTabContent(tabContent);
-
-
   if (!text) return;
-
 
   const synth = window.speechSynthesis;
 
@@ -440,83 +348,52 @@ async function playMinnanSpeech(button) {
     synth.cancel();
   }
 
-
   resetAllPlayButtons();
-
   currentSpeechButton = button;
-
   updateButtonState(button, "preparing");
-
 
   // ⭐ 先建立 audio，保留 iOS 使用者手勢
   const audio = document.createElement("audio");
-
   audio.setAttribute("playsinline", "");
   audio.preload = "auto";
 
   currentUtterance = audio;
 
-
   try {
-
-
     const audioUrl = await fetchMinnanAudio(text);
-
-
     console.log("Minnan audio URL:", audioUrl);
-
-
     audio.src = audioUrl;
-
-
     updateButtonState(button, "playing");
-
-
     audio.onended = () => {
-
       updateButtonState(button, "stopped");
-
       currentSpeechButton = null;
       currentUtterance = null;
-
     };
 
-
     audio.onerror = (e) => {
-
       console.error(
         "audio error:",
         e
       );
 
       updateButtonState(button, "stopped");
-
       currentSpeechButton = null;
       currentUtterance = null;
-
     };
-
 
     await audio.play();
 
-
   } catch(error) {
-
 
     console.error(
       "閩南語播放失敗:",
       error
     );
 
-
     updateButtonState(button, "stopped");
-
     currentSpeechButton = null;
-
     currentUtterance = null;
-
   }
-
 }
 
 function getTextFromTabContent(tabContent) {
