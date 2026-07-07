@@ -113,103 +113,247 @@ let currentSpeechButton = null;
 let currentUtterance = null;
 
 // ------- MinNan TTS support -------
-const MINNAN_TTS_API_URL = "https://happy0708-minnan-test.hf.space/gradio_api/call/v2/tts";
-const MINNAN_TTS_EVENT_URL = "https://happy0708-minnan-test.hf.space/gradio_api/call/v2/tts";
 
+const MINNAN_TTS_API_URL =
+  "https://happy0708-minnan-test.hf.space/gradio_api/call/v2/tts";
+
+const MINNAN_TTS_EVENT_URL =
+  "https://happy0708-minnan-test.hf.space/gradio_api/call/v2/tts";
+
+
+// 解析 Gradio SSE 回傳
 function parseEventPayload(text) {
+
   const trimmedText = (text || "").trim();
+
   if (!trimmedText) return null;
+
 
   const dataLines = trimmedText
     .split(/\r?\n/)
-    .filter((line) => line.startsWith("data:"));
+    .filter(line => line.startsWith("data:"));
 
-  // 從最後一筆 data: 開始找
+
   for (let i = dataLines.length - 1; i >= 0; i--) {
+
     const dataText = dataLines[i]
       .replace(/^data:\s*/, "")
       .trim();
 
-    // 忽略 heartbeat 的 null
+
     if (!dataText || dataText === "null") {
       continue;
     }
 
+
     try {
       return JSON.parse(dataText);
-    } catch (e) {
-      console.warn("JSON parse failed:", dataText, e);
     }
+    catch (e) {
+      console.warn("JSON parse failed:", dataText);
+    }
+
   }
 
-  // 有些 API 直接回 JSON
+
   try {
     return JSON.parse(trimmedText);
-  } catch {
+  }
+  catch {
     return null;
   }
 }
 
+
+
+// 等待 Gradio 產生語音
 async function pollEvent(eventId) {
+
+
   const url = `${MINNAN_TTS_EVENT_URL}/${eventId}`;
-  for (let i = 0; i < 20; i++) {
-    const response = await fetch(url, { method: "GET" });
+
+
+  for (let i = 0; i < 30; i++) {
+
+
+    const response = await fetch(url);
+
     const text = await response.text();
+
+
     const result = parseEventPayload(text);
-    const payload = result?.data?.[0] ?? result?.[0] ?? result;
-    const fileItem = payload?.data?.[0] ?? payload;
 
-    if (fileItem?.url) return fileItem.url;
-    if (fileItem?.path) return fileItem.path;
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const data = result?.data ?? result;
+
+
+    const file =
+      data?.[0] ??
+      data;
+
+
+    if (file?.url) {
+
+      return file.url;
+
+    }
+
+
+    if (file?.path) {
+
+      return file.path;
+
+    }
+
+
+    await new Promise(resolve =>
+      setTimeout(resolve, 1000)
+    );
+
   }
-  return null;
+
+
+  throw new Error("等待語音產生逾時");
+
 }
 
+
+
+// 呼叫閩南語 TTS
 async function fetchMinnanAudio(text) {
-  const response = await fetch(MINNAN_TTS_API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text })
-  });
 
-  const bodyText = await response.text();
-  if (!response.ok) throw new Error(bodyText || "語音生成失敗");
 
-  let result;
-  try {
-    result = JSON.parse(bodyText);
-  } catch {
-    throw new Error("回傳內容不是 JSON");
+  const response = await fetch(
+    MINNAN_TTS_API_URL,
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({
+        text: text
+      })
+    }
+  );
+
+
+  const result = await response.json();
+
+
+  const eventId =
+    result.event_id ||
+    result.eventId;
+
+
+  if (!eventId) {
+
+    throw new Error(
+      "沒有取得 Gradio event id"
+    );
+
   }
 
-  const eventId = result?.event_id || result?.eventId;
-  if (!eventId) throw new Error("Space 未回傳事件 ID");
 
-  const audioUrl = await pollEvent(eventId);
-  if (!audioUrl) throw new Error("Space 未回傳音訊資料");
 
-  const normalizedAudioUrl = audioUrl.startsWith("http")
-    ? audioUrl
-    : `https://happy0708-minnan-test.hf.space/${audioUrl}`;
+  let audioUrl = await pollEvent(eventId);
 
-  const audioResponse = await fetch(normalizedAudioUrl, { headers: { Accept: "audio/*" } });
-  if (!audioResponse.ok) throw new Error("音訊下載失敗");
 
-  const arrayBuffer = await audioResponse.arrayBuffer();
-  const contentType = audioResponse.headers.get("content-type") || "";
-  const inferredMimeType = contentType && contentType !== "application/octet-stream"
-    ? contentType
-    : (normalizedAudioUrl.toLowerCase().endsWith(".wav") ? "audio/wav" : "audio/mpeg");
 
-  const audioBlob = new Blob([arrayBuffer], { type: inferredMimeType });
-  return URL.createObjectURL(audioBlob);
+  if (!audioUrl.startsWith("http")) {
+
+    audioUrl =
+      "https://happy0708-minnan-test.hf.space/"
+      + audioUrl;
+
+  }
+
+
+
+  return audioUrl;
+
 }
 
+
+
+// 播放閩南語
+async function speakMinnan(text) {
+
+
+  try {
+
+
+    const audioUrl =
+      await fetchMinnanAudio(text);
+
+
+
+    const audio =
+      new Audio();
+
+
+
+    audio.src = audioUrl;
+
+
+    // iOS Safari 必須加入
+    audio.setAttribute(
+      "playsinline",
+      ""
+    );
+
+
+    audio.volume = 1.0;
+
+
+
+    await audio.play();
+
+
+
+    console.log(
+      "閩南語播放成功"
+    );
+
+
+  }
+
+
+  catch(error) {
+
+
+    console.error(
+      "閩南語播放失敗:",
+      error
+    );
+
+
+    alert(
+      "閩南語語音播放失敗：" 
+      + error.message
+    );
+
+  }
+
+}
+
+
+
+// 判斷是否為閩南語按鈕
 function isMinnanButton(button) {
-  return button && (button.getAttribute("data-voice") === "minnan" || (button.textContent || "").includes("閩南語"));
+
+
+  return button &&
+    (
+      button.getAttribute("data-voice") === "minnan" ||
+      (button.textContent || "")
+      .includes("閩南語")
+    );
+
 }
+
+
 // ------- end MinNan support -------
 
 // 设置音频播放器
