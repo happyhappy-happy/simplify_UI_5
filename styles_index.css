@@ -24,7 +24,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 30px;
-  flex: 1;
 }
 
 h3 {
@@ -289,10 +288,9 @@ button {
 
 /* Footer tweaks: reuse header look but center lines vertically */
 .footer {
-  border-bottom: none;
   border-top: 3px solid #2168f3;
-  margin-top: auto;
   padding: 18px 0;
+  margin-top: auto;
 }
 
 /* Center footer text and add spacing */
