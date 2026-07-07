@@ -32,7 +32,7 @@ h3 {
 p {
   margin-bottom: 12px;
   font-size: 17px;
-  text-align: center;
+  text-align: left;
 }
 
 p.platform-purpose {
@@ -46,6 +46,7 @@ p.platform-purpose {
   box-sizing: border-box;/* 確保 padding 不會超過 max-width */
   line-height: 1.6;
 }
+
 
 .section h3 {
   margin-bottom: 12px;
