@@ -221,6 +221,10 @@ button {
     padding: 12px 24px;
     font-size: 17px;
   }
+
+  .footer {
+    margin-top: auto;
+  }
 }
 
 @media (max-width: 768px) {
