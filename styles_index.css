@@ -289,11 +289,10 @@ button {
 
 /* Footer tweaks: reuse header look but center lines vertically */
 .footer {
-  /* header already provides background and full-width behaviour */
   border-bottom: none;
   border-top: 3px solid #2168f3;
-  margin-top: 28px; /* 與上方內容保持間距 */
-  padding: 18px 0;  /* 增加上下內距，讓文字不緊貼邊緣 */
+  margin-top: auto;
+  padding: 18px 0;
 }
 
 /* Center footer text and add spacing */
