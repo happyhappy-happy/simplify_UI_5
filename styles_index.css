@@ -7,16 +7,17 @@
 html,
 body {
   min-width: 0;
-  min-height: 100%;
   overflow-x: hidden; /* 隱藏水平捲軸，避免底部出現 horizontal scrollbar */
+  min-height: 100%;
 }
 
 body {
-  display: flex;
-  flex-direction: column;
   font-family: "Noto Sans", "Microsoft YaHei", sans-serif;
   background: #f4f7fb;
   color: #1e2733;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .container {
@@ -293,12 +294,6 @@ button {
   border-top: 3px solid #2168f3;
   margin-top: 28px; /* 與上方內容保持間距 */
   padding: 18px 0;  /* 增加上下內距，讓文字不緊貼邊緣 */
-  width: 100vw;
-  position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
 }
 
 /* Center footer text and add spacing */
