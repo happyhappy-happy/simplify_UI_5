@@ -9,14 +9,43 @@ function formatAmount(amount) {
   return new Intl.NumberFormat("zh-TW").format(Math.round(amount));
 }
 
+function validateAgeInput(age, fieldLabel) {
+  if (!Number.isInteger(age) || age < 18 || age > 77) {
+    return `${fieldLabel}請輸入18~77歲`;
+  }
+  return null;
+}
+
+function validateDescriptionLength(text) {
+  if (String(text || "").length > 300) {
+    return "事件描述請控制在300字以內";
+  }
+  return null;
+}
+
 function computeEstimate() {
   const insuredAge = Number(document.getElementById("insuredAge").value) || 35;
   const currentAge = Number(document.getElementById("currentAge").value) || 40;
   const gender = document.getElementById("gender").value;
   const insuranceType = document.getElementById("insuranceType").value;
   const insuranceProduct = document.getElementById("insuranceProduct").value;
+  const ageError = validateAgeInput(insuredAge, "投保年齡") || validateAgeInput(currentAge, "目前年齡");
+  if (ageError) {
+    alert(ageError);
+    return;
+  }
+  if (currentAge < insuredAge) {
+    alert("目前年齡不得小於投保年齡");
+    return;
+  }
   const coverageAmount = Number(document.getElementById("coverageAmount").value) || 100000;
   const eventDescription = document.getElementById("eventDescription").value;
+  const descriptionError = validateDescriptionLength(eventDescription);
+  if (descriptionError) {
+    resultCard.style.display = "none";
+    alert(descriptionError);
+    return;
+  }
 
   // 計算基本參數
   const yearsInForce = currentAge - insuredAge; // 保單年度
