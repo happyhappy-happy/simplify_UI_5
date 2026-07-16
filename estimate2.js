@@ -46,6 +46,20 @@ function formatAmount(amount) {
   return new Intl.NumberFormat("zh-TW").format(Math.round(amount));
 }
 
+function validateAgeInput(age, fieldLabel) {
+  if (!Number.isInteger(age) || age < 18 || age > 55) {
+    return `${fieldLabel}請輸入18~55歲`;
+  }
+  return null;
+}
+
+function validateDescriptionLength(text) {
+  if (String(text || "").length > 300) {
+    return "事件描述請控制在300字以內";
+  }
+  return null;
+}
+
 function normalizeText(text) {
   return String(text || "")
     .toLowerCase()
@@ -488,6 +502,22 @@ async function computeEstimate() {
   const insuranceProduct = document.getElementById("insuranceProduct").value;
   const coverageAmount = Number(document.getElementById("coverageAmount").value) || 100000;
   const eventDescription = document.getElementById("eventDescription").value;
+  const descriptionError = validateDescriptionLength(eventDescription);
+  if (descriptionError) {
+    resultCard.style.display = "none";
+    alert(descriptionError);
+    return;
+  }
+
+  const ageError = validateAgeInput(insuredAge, "投保年齡") || validateAgeInput(currentAge, "目前年齡");
+  if (ageError) {
+    alert(ageError);
+    return;
+  }
+  if (currentAge < insuredAge) {
+    alert("目前年齡不得小於投保年齡");
+    return;
+  }
 
   if (!claimRules.length) {
     await loadRuleData();
